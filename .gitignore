@@ -1,0 +1,18 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+.matplotlib/
+
+# OS
+.DS_Store
+
+# Generated image outputs (regenerate with src scripts)
+output/part2/
+output/part3/
+!output/readme_plots/
+
+# Keep manifests if regenerated at root level
+!output/**/manifest.json
