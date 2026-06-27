@@ -1,9 +1,9 @@
 # LohithaMovva-CS898BA-Project1
 
 CS 898BA – Image Analysis and Computer Vision  
-Homework One: Doorbell “Alien” Image Analysis
+Homework One: Doorbell “Alien” Image Analysis · Homework Two: Image Segmentation
 
-This repository contains a Python/OpenCV pipeline that analyzes, transforms, blurs, and edge-detects a low-light doorbell camera image (`HW1_IMG_CS898BA.png`).
+This repository contains a Python/OpenCV pipeline that analyzes, transforms, blurs, and edge-detects a low-light doorbell camera image (`HW1_IMG_CS898BA.png`), and segments the central figure using classical thresholding and K-Means clustering (Homework Two, branch `Feature-Segmentation`).
 
 ## Project Structure
 
@@ -14,14 +14,20 @@ LohithaMovva-CS898BA-Project1/
 ├── AI_Log.md                   # AI usage log (course requirement)
 ├── README.md                   # This file
 ├── data/
-│   └── HW1_IMG_CS898BA.png     # Input image
+│   ├── HW1_IMG_CS898BA.png     # Input image
+│   └── ground_truth_mask.png   # HW2 pseudo-ground-truth mask (manual)
 ├── src/
-│   ├── part2_processing.py     # Part 2: stats, color spaces, affine, blur
-│   └── part3_edge_detection.py # Part 3: subsets, edge detection, plots
+│   ├── part2_processing.py           # HW1 Part 2: stats, color spaces, affine, blur
+│   ├── part3_edge_detection.py       # HW1 Part 3: subsets, edge detection, plots
+│   ├── hw2_part2_normalization.py    # HW2 Part 2: multi-channel histogram equalization
+│   ├── hw2_part3_threshold.py        # HW2 Part 3: Otsu + adaptive thresholding
+│   ├── hw2_part4_kmeans.py           # HW2 Part 4: HSV K-Means clustering
+│   └── hw2_part5_evaluation.py       # HW2 Part 5: IoU/Dice metrics + comparison plot
 └── output/
-    ├── part2/                  # 7 base + 14 affine + 168 blur outputs
-    ├── part3/                  # 210 edge-detection outputs + 42 comparison plots
-    └── readme_plots/           # 6 sample plots for this README
+    ├── part2/                  # HW1: 7 base + 14 affine + 168 blur outputs
+    ├── part3/                  # HW1: 210 edge-detection outputs + 42 comparison plots
+    ├── hw2/                    # HW2: normalization, threshold, k-means, evaluation outputs
+    └── readme_plots/           # Sample plots for this README
 ```
 
 ## Setup
@@ -163,6 +169,67 @@ Six randomly selected 5-panel plots (input + Sobel + Laplacian + Canny + Prewitt
 The doorbell image is a challenging low-light capture: underexposure, cool color cast, motion blur on the figure, and high sensor noise in the lawn. Histogram equalization on the HSV V channel is the most useful preprocessing step for human inspection—it reveals the figure more clearly without claiming anything about extraterrestrial origin.
 
 Edge detection confirms that simpler gradient operators over-segment noisy dark regions, while Canny provides cleaner structural boundaries. Combined with moderate Gaussian blur (σ ≈ 1.0–1.5) before edge detection, Canny would likely perform even better, though this assignment applies edge detectors directly to the subset images as specified.
+
+---
+
+## Homework Two: Image Segmentation
+
+Branch: **`Feature-Segmentation`**
+
+Run the Homework Two scripts in order (after HW1 setup):
+
+```bash
+python src/hw2_part2_normalization.py
+python src/hw2_part3_threshold.py
+python src/hw2_part4_kmeans.py
+python src/hw2_part5_evaluation.py
+```
+
+### Part 2: Multi-Channel Normalization
+
+The original BGR image is split into Blue, Green, and Red channels. Each channel receives independent histogram equalization (`cv2.equalizeHist`), then the channels are merged back into a fully normalized color image. Unlike Homework One’s single V-channel equalization, this normalizes illumination across the entire color spectrum and dramatically improves figure visibility before segmentation.
+
+### Part 3: Threshold-Based Segmentation
+
+On the normalized grayscale image:
+
+- **Otsu’s global threshold** (automatic threshold = 129.0) separates bright vs. dark regions globally.
+- **Adaptive Gaussian threshold** (block size 51, C = 8) adapts to local illumination.
+
+Both methods save binary masks and masked foreground extractions under `output/hw2/part3/`.
+
+### Part 4: K-Means Clustering (HSV)
+
+The normalized image is converted to HSV and clustered with K-Means for K ∈ {3, 4, 5}. The cluster best overlapping the expected figure region (right-center lawn) is selected. **K = 5** (cluster 4) scored highest and was used as the final K-Means segmentation.
+
+### Part 5: Qualitative Analysis
+
+| Method | Pros | Cons |
+|--------|------|------|
+| **Otsu (normalized)** | Fast, parameter-free global split; improved contrast after multi-channel normalization reveals more structure than raw-image Otsu | Still treats lawn, sky, and figure as one intensity class; cannot isolate the figure; floods ~50% of pixels as foreground |
+| **Adaptive (normalized)** | Handles local illumination (porch lights vs. dark lawn); preserves fine boundary detail | Extremely noise-sensitive on grass texture; produces fragmented “stippled” mask; figure merges with background edges |
+| **K-Means (normalized)** | Uses full HSV color information; best figure isolation of the three methods; separates costume tones from grass and houses | Background speckle remains (leaves, driveway edges); cluster selection requires ROI heuristic; edges are blob-like rather than crisp |
+
+**Impact of multi-channel normalization:** Homework One operated on the raw underexposed image (means ≈ 21–25 per channel). Multi-channel equalization boosts contrast in all color bands simultaneously, making the grey-purple costume and head distinguishable from the lawn. Raw-image Otsu achieves IoU = 0.021 vs. normalized Otsu IoU = 0.044—roughly 2× improvement—confirming that illumination normalization is a necessary preprocessing step, even though threshold methods alone still fail to cleanly isolate the figure.
+
+### Part 5: Quantitative Comparison (Pseudo-Ground Truth)
+
+A manual pseudo-ground-truth mask (`data/ground_truth_mask.png`) was defined using head + body ellipses traced over the figure in the normalized image.
+
+| Method | IoU (Jaccard) | Dice Coefficient |
+|--------|---------------|------------------|
+| Otsu (normalized) | 0.0439 | 0.0841 |
+| Adaptive (normalized) | 0.0377 | 0.0727 |
+| K-Means (normalized) | **0.0635** | **0.1195** |
+| Otsu (raw image, HW1 baseline) | 0.0209 | 0.0409 |
+
+K-Means achieves the highest overlap with the reference mask. All absolute scores remain low because threshold methods classify large background regions as foreground, while the pseudo-ground-truth tightly encloses only the figure’s biomass region.
+
+### Segmentation Comparison Plot
+
+Side-by-side view: original image, multi-channel normalized image, Otsu mask, adaptive mask, K-Means mask, and pseudo-ground truth.
+
+![Homework Two segmentation comparison](output/readme_plots/hw2_segmentation_comparison.png)
 
 ## Author
 

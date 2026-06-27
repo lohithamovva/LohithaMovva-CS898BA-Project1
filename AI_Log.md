@@ -5,8 +5,30 @@
 | 06/12/2026 12:07 AM | Full Homework One assignment prompt for CS 898BA (Parts 1–4): create git repo LohithaMovva-CS898BA-Project1, Hello World script, AI_Log.md, incremental commits, OpenCV pipeline for image stats/color spaces/affine transforms/Gaussian blur/edge detection/plots, and comprehensive README. | Gemini | Generated complete Python project structure with `hello_world.py`, `src/part2_processing.py`, `src/part3_edge_detection.py`, copied `HW1_IMG_CS898BA.png`, produced all required outputs (168 Part 2 images, 210 Part 3 images, 42 comparison plots, 6 README plots), and drafted README.md with setup, results, and discussion. | Entire codebase, documentation, and output pipeline design. |
 | 06/12/2026 12:07 AM | Confirm author and repository naming as Lohitha Movva / LohithaMovva-CS898BA-Project1. | Gemini | Updated repository name, README author line, and AI_Log to use Lohitha Movva consistently. | Updated README.md and AI_Log.md. |
 | 06/12/2026 12:07 AM | Review edge detection results, Gaussian blur discussion, and README plot selection for Part 3 analysis. | Gemini | Refined written analysis of Sobel, Laplacian, Canny, and Prewitt; confirmed Canny as best method for low-light noisy doorbell image set. | README discussion and edge detection comparison sections. |
+| 06/27/2026 07:45 PM | Full Homework Two assignment prompt for CS 898BA (Parts 1–6): create Feature-Segmentation branch, multi-channel histogram equalization, Otsu/adaptive thresholding, HSV K-Means (K=3–5), pseudo-ground-truth mask, IoU/Dice metrics, comparison plot in README, incremental commits, AI_Log update. | Cursor (Claude) | Implemented `src/hw2_part2_normalization.py` through `hw2_part5_evaluation.py`, generated segmentation outputs, pseudo-ground-truth ellipses, quantitative metrics, and README Homework Two section with qualitative analysis. | HW2 segmentation pipeline, evaluation scripts, README, AI_Log, ground truth mask, comparison plot. |
 
-## Detailed Prompt (06/12/2026 12:07 AM)
+## Detailed Prompt (06/27/2026 07:45 PM)
+
+```
+Homework Two — CS 898BA Image Segmentation
+
+Part 1: Feature-Segmentation branch, AI_Log.md, incremental commits.
+Part 2: Multi-channel BGR histogram equalization → normalized color image.
+Part 3: Otsu global + adaptive Gaussian threshold on normalized grayscale; save masks and foreground extractions.
+Part 4: HSV K-Means clustering (K=3,4,5); select optimal K; isolate figure cluster.
+Part 5: Qualitative analysis, pseudo-ground-truth mask, IoU and Dice vs 3 methods, comparison plot in README.
+Part 6: Submit updated GitHub repository link.
+```
+
+## Design Decisions Influenced by AI (Homework Two)
+
+1. **Multi-channel equalization on BGR** (not just HSV-V) to satisfy the assignment’s full-spectrum normalization requirement.
+2. **K-Means cluster selection** uses a figure ROI score (coverage in right-center region minus area penalty) rather than manual label picking.
+3. **Pseudo-ground-truth** defined as two hand-placed ellipses (head + torso/legs) for reproducible biomass-region annotation.
+4. **Raw vs. normalized Otsu baseline** included in evaluation to quantify normalization impact vs. Homework One.
+5. **HW2 generated outputs** gitignored under `output/hw2/`; comparison plot committed to `output/readme_plots/`.
+
+## Design Decisions Influenced by AI
 
 ```
 Homework One — CS 898BA Image Analysis and Computer Vision
