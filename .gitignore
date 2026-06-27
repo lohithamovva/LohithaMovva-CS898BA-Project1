@@ -12,7 +12,9 @@ venv/
 # Generated image outputs (regenerate with src scripts)
 output/part2/
 output/part3/
+output/hw2/
 !output/readme_plots/
+!output/readme_plots/hw2_segmentation_comparison.png
 
 # Keep manifests if regenerated at root level
 !output/**/manifest.json
